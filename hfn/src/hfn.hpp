@@ -120,6 +120,7 @@ public:
     int traj_mode;
     double max_speed, max_acc;
     std::string agent;
+    double d_yaw;
 
   };
 
@@ -169,8 +170,13 @@ private:
   Trajectory prev_traj_, cur_traj_;
   bool ifSetGoal = false;
   bool ifMovingBack = false;
+  bool ifHasInitOrien = false;
   geometry_msgs::PoseStamped start;
   geometry_msgs::PoseStamped oneGoal;
+  Eigen::Quaterniond cur_orient_;
+  Eigen::Quaterniond init_orient_;
+  double init_yaw;
+  double cur_yaw;
 
   void gen_traj(Eigen::Vector2f &xi, 
                 Eigen::Vector2f &vi, 

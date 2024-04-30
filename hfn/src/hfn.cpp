@@ -412,6 +412,7 @@ HFNWrapper* HFNWrapper::ROSInit(ros::NodeHandle& nh) {
   nh.param("max_speed", p.max_speed, 0.5);
   nh.param("max_acc", p.max_acc, 0.5);
   nh.param("agent", p.agent, string("scarab"));
+  nh.param("d_yaw", p.d_yaw, 0.0);
 
 
   p.name_space = nh.getNamespace();
@@ -482,6 +483,7 @@ void HFNWrapper::onPose(const geometry_msgs::PoseStamped &input) {
     if(ifMovingBack){
         cmd.linear.x = -cmd.linear.x;
     }
+    cmd.angular.z = (init_yaw - cur_yaw > 0) ? params_.d_yaw : -params_.d_yaw;
   }
 
   bool xy_ok = turning_ ||
@@ -594,6 +596,7 @@ void HFNWrapper::onLaserScan(const sensor_msgs::LaserScan &scan) {
     if(ifMovingBack){
         cmd.linear.x = -cmd.linear.x;
     }
+      cmd.angular.z = (init_yaw - cur_yaw > 0) ? params_.d_yaw : -params_.d_yaw;
 
     //params_.tau_2
 
@@ -648,6 +651,7 @@ void HFNWrapper::onLaserScan(const sensor_msgs::LaserScan &scan) {
       if(ifMovingBack){
           cmd.linear.x = -cmd.linear.x;
       }
+        cmd.angular.z = (init_yaw - cur_yaw > 0) ? params_.d_yaw : -params_.d_yaw;
     }
 
     /// @songhao directly assign traj vel to cmd_vel_linear
@@ -655,6 +659,7 @@ void HFNWrapper::onLaserScan(const sensor_msgs::LaserScan &scan) {
     if(ifMovingBack){
         cmd.linear.x = -cmd.linear.x;
     }
+      cmd.angular.z = (init_yaw - cur_yaw > 0) ? params_.d_yaw : -params_.d_yaw;
     //cout << "cmd.linear.x = " << cmd.linear.x << endl;
   }
   else{
@@ -700,6 +705,26 @@ void HFNWrapper::onOdom(const nav_msgs::Odometry &odom) {
   cur_linear_vel_ = odom.twist.twist.linear.x;
   cur_pos_(0) = odom.pose.pose.position.x;
   cur_pos_(1) = odom.pose.pose.position.y;
+  if(!ifHasInitOrien) {
+      ifHasInitOrien = true;
+      init_orient_.w() = odom.pose.pose.orientation.w;
+      init_orient_.x() = odom.pose.pose.orientation.x;
+      init_orient_.y() = odom.pose.pose.orientation.y;
+      init_orient_.z() = odom.pose.pose.orientation.z;
+
+      init_yaw = atan2(2.0*(init_orient_.w()*init_orient_.z() + init_orient_.x()*init_orient_.y()),
+                       -1.0 + 2.0 * (init_orient_.w() * init_orient_.w() + init_orient_.x() * init_orient_.x()));
+      //init_yaw += 0.3;
+      //p.d_yaw = 0.05;
+  }else{
+      cur_orient_.w() = odom.pose.pose.orientation.w;
+      cur_orient_.x() = odom.pose.pose.orientation.x;
+      cur_orient_.y() = odom.pose.pose.orientation.y;
+      cur_orient_.z() = odom.pose.pose.orientation.z;
+      cur_yaw = atan2(2.0*(cur_orient_.w()*cur_orient_.z() + cur_orient_.x()*cur_orient_.y()),
+                       -1.0 + 2.0 * (cur_orient_.w() * cur_orient_.w() + cur_orient_.x() * cur_orient_.x()));
+     // ROS_INFO("init yaw = %f , cur_yaw = %f, d_yaw = %f", init_yaw, cur_yaw, params_.d_yaw);
+  }
 }
 
 void HFNWrapper::setGoal(const vector<geometry_msgs::PoseStamped> &p) {
