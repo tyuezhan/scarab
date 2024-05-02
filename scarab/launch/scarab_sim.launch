@@ -97,6 +97,8 @@
       <param name="max_speed"          value="0.22"/> <!--default 0.5m/s-->
       <param name="max_acc"            value="0.3"/> <!--default 0.5m/s^2-->
       <param name="agent"              value="$(arg agent)"/>
+      <param name="d_yaw"              value="0.05"/>
+      
     </node>
 
     <!-- slam for localization -->

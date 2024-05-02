@@ -1,0 +1,39 @@
+<launch>
+
+  <arg name="agent"       default="scarab40"/>
+  <arg name="rviz"        default="true"/>
+
+  <!-- gazebo args -->
+  <arg name="world"       default="levine"/>
+  <arg name="verbose"     default="false"/>
+  <arg name="debug"       default="false"/>
+  <arg name="gazebo_gui"  default="true"/>
+
+  <!-- SIMULATION -->
+
+  <!-- start gazebo -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name"   value="$(find scarab_gazebo)/worlds/$(arg world).world"/>
+    <arg name="gui"          value="$(arg gazebo_gui)"/>
+    <arg name="debug"        value="$(arg debug)"/>
+    <arg name="verbose"      value="$(arg verbose)"/>
+    <arg name="paused"       value="false"/>
+    <arg name="use_sim_time" value="true"/>
+  </include>
+
+  <!-- start rviz -->
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find scarab)/rviz/$(arg agent).rviz"/>
+
+  <!-- load gazebo world -->
+  <node name="perch_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+        args="-sdf -model $(arg world)
+              -file $(find scarab_gazebo)/models/$(arg world)/model.sdf"/>
+
+  <!-- ROBOTS -->
+
+  <include file="$(find scarab)/launch/scarab_sim.launch">
+    <arg name="agent"   value="$(arg agent)"/>
+  </include>
+
+</launch>
