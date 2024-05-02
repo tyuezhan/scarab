@@ -26,7 +26,7 @@
   <group if="$(arg use_vicon)" ns="$(arg agent)">
 
     <node pkg="map_server" name="map" type="map_server" output="screen"
-          args="$(find scarab)/maps/empty_map.yaml" >
+          args="$(find scarab)/maps/vicon.yaml" >
       <param name="frame_id" value="$(arg map_frame)" />
       <remap from="map" to="$(arg agent)/$(arg map_topic)" />
     </node>
