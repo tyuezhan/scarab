@@ -1,0 +1,113 @@
+<launch>
+
+  <arg name="agent"         default="$(env AGENT)" />
+  <arg name="use_vicon"     default="true"/>
+
+  <arg name="odom_topic"    default="/vicon/scarab45/odom" if="$(arg use_vicon)"/>
+  <arg name="odom_topic"    default="odom_laser" unless="$(arg use_vicon)"/>
+  <arg name="map_topic"     default="map"/>
+  <arg name="cmd_vel_topic" default="cmd_vel"/>
+  <arg name="scan_topic"    default="scan"/>
+  <arg name="pose_topic"    default="pose"/>
+  <arg name="goal_topic"    default="move_base_simple/goal"/>
+
+  <arg name="map_frame"     default="$(arg agent)/map" />
+  <arg name="base_frame"    default="$(arg agent)/base_link" />
+  <arg name="odom_frame"    default="$(arg agent)/odom" />
+
+  <!-- gmapping map args -->
+  <arg name="map_res" default="0.05"/> <!-- map resolution -->
+  <arg name="map_xmin"    default="-50"/>  <!-- initial map min bound in x -->
+  <arg name="map_ymin"    default="-50"/>  <!-- initial map min bound in y -->
+  <arg name="map_xmax"    default="50"/>   <!-- initial map max bound in x -->
+  <arg name="map_ymax"    default="50"/>   <!-- initial map max bound in y -->
+
+  <!-- launch components for navigation with vicon -->
+  <group if="$(arg use_vicon)" ns="$(arg agent)">
+
+    <node pkg="map_server" name="map" type="map_server" output="screen"
+          args="$(find scarab)/maps/empty_map.yaml" >
+      <param name="frame_id" value="$(arg map_frame)" />
+      <remap from="map" to="$(arg agent)/$(arg map_topic)" />
+    </node>
+
+    <node name="dummy_slam" pkg="tf" type="static_transform_publisher"
+          args="0.0 0.0 0.0 0.0 0.0 0.0 $(arg map_frame) $(arg odom_frame) 100" />
+
+    <node name="odom_to_tf" pkg="scarab" type="odom_to_tf.py" output="screen">
+      <param name="base_frame_id" value="$(arg base_frame)"/>
+      <param name="odom_frame_id" value="$(arg odom_frame)"/>
+      <remap from="odom" to="$(arg odom_topic)" />
+    </node>
+
+    <!--
+        <node name="pose_stamped" pkg="hfn" type="tf_posestamped_node.py" >
+        <param name="base_frame_id" value="/$(arg agent)/$(arg base_frame)" />
+        <param name="map_frame_id" value="/$(arg agent)/$(arg map_frame)" />
+        </node> -->
+
+  </group>
+
+
+  <!-- launch components for navigation with gmapping -->
+  <group unless="$(arg use_vicon)">
+
+    <include file="$(find scarab)/launch/gmapping.launch">
+      <arg name="agent"       value="$(arg agent)" />
+      <arg name="scan_topic"  value="$(arg scan_topic)"/>
+      <arg name="map_topic"   value="$(arg map_topic)"/>
+      <arg name="odom_frame"  value="$(arg odom_frame)"/>
+      <arg name="base_frame"  value="$(arg base_frame)"/>
+      <arg name="map_frame"   value="$(arg map_frame)"/>
+      <arg name="map_res"     value="$(arg map_res)"/>
+      <arg name="xmin"        value="$(arg map_xmin)"/>
+      <arg name="ymin"        value="$(arg map_ymin)"/>
+      <arg name="xmax"        value="$(arg map_xmax)"/>
+      <arg name="ymax"        value="$(arg map_ymax)"/>
+    </include>
+
+  </group>
+
+
+  <!-- common components -->
+  <group ns="$(arg agent)">
+
+    <!-- publish tf as pose -->
+    <node name="pose" pkg="hfn" type="tf_posestamped_node.py" output="screen">
+      <param name="base_frame_id" value="$(arg base_frame)"/>
+      <param name="map_frame_id" value="$(arg map_frame)"/>
+      <remap from="pose" to="$(arg pose_topic)" />
+    </node>
+
+    <!-- human friendly navigation -->
+    <include file="$(find scarab)/launch/hfn.launch" >
+      <arg name="agent"          value="$(arg agent)" />
+      <arg name="use_vicon"      value="$(arg use_vicon)" />
+      <arg name="odom_topic"     value="$(arg odom_topic)" />
+      <arg name="map_topic"      value="$(arg map_topic)" />
+      <arg name="cmd_vel_topic"  value="$(arg cmd_vel_topic)" />
+      <arg name="scan_topic"     value="$(arg scan_topic)" />
+      <arg name="pose_topic"     value="$(arg pose_topic)" />
+      <arg name="map_frame"      value="$(arg map_frame)" />
+      <arg name="base_frame"     value="$(arg base_frame)" />
+    </include>
+
+    <!-- allows sending nav goals from rviz -->
+    <node name="goal_to_action" pkg="hfn" type="goal_to_action.py" output="screen">
+      <remap from="goal" to="$(arg goal_topic)" />
+    </node>
+
+  </group>
+
+
+  <!-- robot components -->
+  <include file="$(find scarab)/launch/scarab.launch">
+    <arg name="agent"      value="$(arg agent)"/>
+    <arg name="camera"     value="false"/>
+    <arg name="hokuyo"     value="true"/>
+    <arg name="laser_odom" value="true"/>
+    <arg name="base_frame" value="$(arg base_frame)"/>
+    <arg name="odom_frame" value="$(arg odom_frame)"/>
+  </include>
+
+</launch>
