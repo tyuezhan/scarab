@@ -413,6 +413,7 @@ HFNWrapper* HFNWrapper::ROSInit(ros::NodeHandle& nh) {
   nh.param("max_acc", p.max_acc, 0.5);
   nh.param("agent", p.agent, string("scarab"));
   nh.param("d_yaw", p.d_yaw, 0.0);
+  nh.param("agent_r", p.agent_r, 0.0);
 
 
   p.name_space = nh.getNamespace();
@@ -1153,6 +1154,7 @@ void HFNWrapper::pubTraj()
   poly_traj.traj_id         = traj_id;
   poly_traj.order           = 3;
   poly_traj.dim             = 2;
+  poly_traj.agent_radius    = params_.agent_r;
 
   int piece_num = cur_traj_.getPieceNum();
   poly_traj.coeff_x.resize(piece_num * 4);
