@@ -1,6 +1,7 @@
 <launch>
 
   <arg name="agent"       default="scarab40"/>
+  <arg name="id"       default="0"/>
   <arg name="rviz"        default="true"/>
 
   <!-- gazebo args -->
@@ -34,6 +35,7 @@
 
   <include file="$(find scarab)/launch/scarab_sim.launch">
     <arg name="agent"   value="$(arg agent)"/>
+    <arg name="id"   value="$(arg id)"/>
   </include>
 
 </launch>
