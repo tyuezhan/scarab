@@ -121,6 +121,7 @@ public:
     double max_speed, max_acc;
     std::string agent;
     double d_yaw;
+    double agent_r;
 
   };
 
@@ -179,6 +180,7 @@ private:
   double init_yaw;
   double cur_yaw;
   bool hasGoal = false;
+
 
   void gen_traj(Eigen::Vector2f &xi, 
                 Eigen::Vector2f &vi, 

@@ -1,6 +1,7 @@
 <launch>
 
   <arg name="agent"        default="scarab40"/>
+  <arg name="id"        default="0"/>
   <arg name="ground_truth" default="true"/> <!-- publish ground truth tf tree -->
 
   <!-- robot spawn args -->
@@ -98,6 +99,9 @@
       <param name="max_acc"            value="0.3"/> <!--default 0.5m/s^2-->
       <param name="agent"              value="$(arg agent)"/>
       <param name="d_yaw"              value="0.05"/>
+      <param name="agent_r"            value="0.2"/>
+      <param name="agent_r"            value="0.2"/>
+      <param name="robot_id"            value="$(arg id)"/>
       
     </node>
 
