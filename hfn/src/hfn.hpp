@@ -122,6 +122,7 @@ public:
     std::string agent;
     double d_yaw;
     double agent_r;
+    int robot_id;
 
   };
 

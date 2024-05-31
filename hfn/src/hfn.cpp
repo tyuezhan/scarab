@@ -414,6 +414,7 @@ HFNWrapper* HFNWrapper::ROSInit(ros::NodeHandle& nh) {
   nh.param("agent", p.agent, string("scarab"));
   nh.param("d_yaw", p.d_yaw, 0.0);
   nh.param("agent_r", p.agent_r, 0.0);
+  nh.param("robot_id", p.robot_id, 0);
 
 
   p.name_space = nh.getNamespace();
@@ -951,8 +952,7 @@ void HFNWrapper::gen_traj(Eigen::Vector2f &xi,
   traj_start_time_ = ros::Time::now();  //////// get sim time from 0
 
   //////// get time from system clock: for planner
-  ros::WallTime wall_time_now = ros::WallTime::now();
-  send_traj_start_time = ros::Time(wall_time_now.toSec());
+  send_traj_start_time = ros::Time(ros::WallTime::now().toSec());
 
   return;
 }
@@ -1145,12 +1145,16 @@ void HFNWrapper::pubTraj()
   std::string agent = params_.agent;
   int agent_num = std::stoi(agent.substr(6, 2));
 
-    ROS_WARN("HERE1");
+
   kr_traj_msgs::PolyTrajByCoeffs poly_traj;
+  poly_traj.header.stamp      =  ros::Time(ros::WallTime::now().toSec());
+  //poly_traj.header.seq = 1;
+  poly_traj.header.frame_id = "simulator";
+
   poly_traj.total_agent_num = 1;  ///  ......
   //poly_traj.start_time      = traj_start_time_;
   poly_traj.start_time      =   send_traj_start_time;
-  poly_traj.agent_id        = agent_num;
+  poly_traj.agent_id        = params_.robot_id;
   poly_traj.traj_id         = traj_id;
   poly_traj.order           = 3;
   poly_traj.dim             = 2;
@@ -1179,7 +1183,8 @@ void HFNWrapper::pubTraj()
 
 
   traj_id++;
-
+  ROS_INFO("[scarab]: send the trajectory to vicon_map, with stamp(current time) = %f, and frame_id = %s",
+           poly_traj.header.stamp.toSec(), poly_traj.header.frame_id.c_str());
 }
 
 
