@@ -1,6 +1,6 @@
 <launch>
 
-  <arg name="agent"        default="scarab40"/>
+  <arg name="agent"        default="scarab40"/>  <!-- agent name, need to be the same as vicon's if using vicon -->
   <arg name="id"        default="0"/>
   <arg name="ground_truth" default="true"/> <!-- publish ground truth tf tree -->
 
@@ -98,7 +98,8 @@
       <param name="max_speed"          value="0.22"/> <!--default 0.5m/s-->
       <param name="max_acc"            value="0.3"/> <!--default 0.5m/s^2-->
       <param name="agent"              value="$(arg agent)"/>
-      <param name="d_yaw"              value="0.05"/>
+      <param name="d_yaw"              value="0.02"/>
+      <param name="min_yaw"              value="0.001"/>
       <param name="agent_r"            value="0.2"/>
       <param name="agent_r"            value="0.2"/>
       <param name="robot_id"            value="$(arg id)"/>
