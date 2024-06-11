@@ -1178,8 +1178,10 @@ void HFNWrapper::pubTraj()
   poly_traj.dim             = 2;
   poly_traj.agent_radius    = params_.agent_r;
   poly_traj.name            = params_.agent;
+  
 
   int piece_num = cur_traj_.getPieceNum();
+  int q = 0;
   poly_traj.coeff_x.resize(piece_num * 4);
   poly_traj.coeff_y.resize(piece_num * 4);
   poly_traj.duration.resize(piece_num);
