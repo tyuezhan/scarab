@@ -415,7 +415,8 @@ HFNWrapper* HFNWrapper::ROSInit(ros::NodeHandle& nh) {
   nh.param("d_yaw", p.d_yaw, 0.0);
   nh.param("agent_r", p.agent_r, 0.0);
   nh.param("robot_id", p.robot_id, 0);
-
+  nh.param("min_yaw", p.min_yaw, 0.0);
+	
 
   p.name_space = nh.getNamespace();
 
@@ -493,11 +494,18 @@ void HFNWrapper::onPose(const geometry_msgs::PoseStamped &input) {
   if (xy_ok &&
       (params_.goal_tol_ang >= M_PI ||
       ang_distance(pose_.pose, goals_.back().pose) < params_.goal_tol_ang)) {
-    stop();
-    ROS_INFO("HFNWrapper: FINISHED");
-    cur_traj_.clear();
+    //stop();
+
     //callback_(FINISHED);
-    move_back();
+    if(std::abs(cur_yaw - init_yaw) > params_.min_yaw){
+        ROS_INFO("d yaw is %f", std::abs(cur_yaw - init_yaw) );
+        cmd.angular.z = (init_yaw - cur_yaw > 0) ? params_.d_yaw : -params_.d_yaw;
+    }else{
+        ROS_INFO("HFNWrapper: FINISHED");
+        stop();
+        cur_traj_.clear();
+        move_back();
+    }
     //return;
   } else if ((ros::Time::now() - goal_time_).toSec() > params_.stuck_start) {
     //bool stuck = true;
@@ -607,13 +615,23 @@ void HFNWrapper::onLaserScan(const sensor_msgs::LaserScan &scan) {
     //std::cout << "the current time is " << cur_time << std::endl;
     if (cur_time > cur_traj_.getTotalTime())
     {
-      //cout << "move back at here\n";
-      stop();
-      cur_traj_.clear();
-      //callback_(FINISHED);
-      //return;
-      move_back();
-      return;
+        if(std::abs(cur_yaw - init_yaw) > params_.min_yaw){
+            ROS_INFO("d yaw is %f", std::abs(cur_yaw - init_yaw) );
+            cmd.angular.z = (init_yaw - cur_yaw > 0) ? params_.d_yaw : -params_.d_yaw;
+        }else{
+            ROS_INFO("HFNWrapper: FINISHED");
+            stop();
+            cur_traj_.clear();
+            move_back();
+            return;
+        }
+//      //cout << "move back at here\n";
+//      stop();
+//      cur_traj_.clear();
+//      //callback_(FINISHED);
+//      //return;
+//      move_back();
+//      return;
     }
     
 
@@ -635,6 +653,7 @@ void HFNWrapper::onLaserScan(const sensor_msgs::LaserScan &scan) {
     //if vel is nan, then stop
     if (std::isnan(vel(0)) || std::isnan(vel(1)))
     {
+      ROS_WARN("vel is nan");
       stop();
       cur_traj_.clear();
       //callback_(FINISHED);
@@ -721,8 +740,6 @@ void HFNWrapper::onOdom(const nav_msgs::Odometry &odom) {
       double xg = fixGoal.pose.position.x;
       double yg = fixGoal.pose.position.y;
       init_yaw = atan2(yg - y0, xg - x0);
-//      init_yaw = atan2(2.0*(init_orient_.w()*init_orient_.z() + init_orient_.x()*init_orient_.y()),
-//                       -1.0 + 2.0 * (init_orient_.w() * init_orient_.w() + init_orient_.x() * init_orient_.x()));
 
   }else{
       cur_orient_.w() = odom.pose.pose.orientation.w;
@@ -959,6 +976,7 @@ void HFNWrapper::gen_traj(Eigen::Vector2f &xi,
 
 void HFNWrapper::stop() {
   ROS_INFO("HFNWrapper: Stopping");
+
   active_ = false;
 
   geometry_msgs::Twist cmd_vel;
@@ -1149,7 +1167,7 @@ void HFNWrapper::pubTraj()
   kr_traj_msgs::PolyTrajByCoeffs poly_traj;
   poly_traj.header.stamp      =  ros::Time(ros::WallTime::now().toSec());
   //poly_traj.header.seq = 1;
-  poly_traj.header.frame_id = "simulator";
+  //poly_traj.header.frame_id = "simulator";
 
   poly_traj.total_agent_num = 1;  ///  ......
   //poly_traj.start_time      = traj_start_time_;
@@ -1159,8 +1177,11 @@ void HFNWrapper::pubTraj()
   poly_traj.order           = 3;
   poly_traj.dim             = 2;
   poly_traj.agent_radius    = params_.agent_r;
+  poly_traj.name            = params_.agent;
+  
 
   int piece_num = cur_traj_.getPieceNum();
+  int q = 0;
   poly_traj.coeff_x.resize(piece_num * 4);
   poly_traj.coeff_y.resize(piece_num * 4);
   poly_traj.duration.resize(piece_num);
@@ -1183,8 +1204,8 @@ void HFNWrapper::pubTraj()
 
 
   traj_id++;
-  ROS_INFO("[scarab]: send the trajectory to vicon_map, with stamp(current time) = %f, and frame_id = %s",
-           poly_traj.header.stamp.toSec(), poly_traj.header.frame_id.c_str());
+  ROS_INFO("[scarab]: send the trajectory to vicon_map, with stamp(current time) = %f, 1st_traj_duration = %f, and frame_id = %s",
+           poly_traj.header.stamp.toSec(), poly_traj.duration[0], poly_traj.header.frame_id.c_str());
 }
 
 

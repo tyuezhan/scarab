@@ -121,6 +121,7 @@ public:
     double max_speed, max_acc;
     std::string agent;
     double d_yaw;
+    double min_yaw;
     double agent_r;
     int robot_id;
 

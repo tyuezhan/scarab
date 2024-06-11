@@ -1,14 +1,7 @@
 <launch>
 
-  <arg name="agent0"       default="scarab40"/>
-  <arg name="agent1"       default="scarab45"/>
-  <arg name="id0"       default="0"/>
-  <arg name="id1"       default="1"/>
-  <arg name="spawn_x0" default="0.0"/>
-  <arg name="spawn_y0" default="0.0"/>
-  <arg name="spawn_x1" default="2.0"/>
-  <arg name="spawn_y1" default="2.0"/>
-
+  <arg name="agent"       default="scarab40"/>
+  <arg name="id"       default="0"/>
   <arg name="rviz"        default="true"/>
 
   <!-- gazebo args -->
@@ -29,39 +22,20 @@
     <arg name="use_sim_time" value="true"/>
   </include>
 
-
-
   <!-- start rviz -->
-  <node name="rviz0" pkg="rviz" type="rviz"
-        args="-d $(find scarab)/rviz/$(arg agent0).rviz"/>
-
-  <node name="rviz1" pkg="rviz" type="rviz"
-        args="-d $(find scarab)/rviz/$(arg agent1).rviz"/>
-
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find scarab)/rviz/$(arg agent).rviz"/>
 
   <!-- load gazebo world -->
   <node name="perch_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
         args="-sdf -model $(arg world)
               -file $(find scarab_gazebo)/models/$(arg world)/model.sdf"/>
 
-
-
   <!-- ROBOTS -->
 
   <include file="$(find scarab)/launch/scarab_sim.launch">
-    <arg name="agent"   value="$(arg agent0)"/>
-    <arg name="id"   value="$(arg id0)"/>
-    <arg name="spawn_x" value="$(arg spawn_x0)"/>
-    <arg name="spawn_y" value="$(arg spawn_y0)"/>
-
+    <arg name="agent"   value="$(arg agent)"/>
+    <arg name="id"   value="$(arg id)"/>
   </include>
-
-  <include file="$(find scarab)/launch/scarab_sim.launch">
-    <arg name="agent"   value="$(arg agent1)"/>
-    <arg name="id"   value="$(arg id1)"/>
-    <arg name="spawn_x" value="$(arg spawn_x1)"/>
-    <arg name="spawn_y" value="$(arg spawn_y1)"/>
-  </include>
-
 
 </launch>
